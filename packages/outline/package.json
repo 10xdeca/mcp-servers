@@ -1,0 +1,16 @@
+{
+  "name": "@10xdeca/mcp-outline",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "mcp-outline": "./index.js"
+  },
+  "description": "MCP server for Outline wiki",
+  "keywords": ["mcp", "outline", "wiki"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^4.3.6"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@10xdeca/mcp-kan",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "mcp-kan": "./index.js"
+  },
+  "description": "MCP server for Kan board task management",
+  "keywords": ["mcp", "kan", "kanban"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^4.3.6"
+  }
+}
