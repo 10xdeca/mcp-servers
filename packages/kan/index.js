@@ -105,13 +105,13 @@ server.tool(
   "Create a new board in a workspace",
   {
     workspace_id: z.string().min(12).describe("Workspace public ID"),
-    title: z.string().min(1).describe("Board title"),
-    description: z.string().optional().describe("Board description"),
+    name: z.string().min(1).describe("Board name"),
+    lists: z.array(z.string().min(1)).default(["To Do", "In Progress", "Done"]).describe("List names to create (defaults to To Do, In Progress, Done)"),
+    labels: z.array(z.string().min(1)).default(["Bug", "Feature", "Enhancement"]).describe("Label names to create (defaults to Bug, Feature, Enhancement)"),
   },
-  async ({ workspace_id, title, description }) => {
-    const body = { title, workspacePublicId: workspace_id };
-    if (description) body.description = description;
-    const data = await kanFetch("/boards", {
+  async ({ workspace_id, name, lists, labels }) => {
+    const body = { name, workspacePublicId: workspace_id, lists, labels };
+    const data = await kanFetch(`/workspaces/${workspace_id}/boards`, {
       method: "POST",
       body: JSON.stringify(body),
     });
@@ -121,16 +121,16 @@ server.tool(
 
 server.tool(
   "kan_update_board",
-  "Update a board's title or description",
+  "Update a board's name or visibility",
   {
     board_id: z.string().min(12).describe("Board public ID"),
-    title: z.string().min(1).optional().describe("New board title"),
-    description: z.string().optional().describe("New board description"),
+    name: z.string().min(1).optional().describe("New board name"),
+    visibility: z.enum(["public", "private"]).optional().describe("Board visibility"),
   },
-  async ({ board_id, title, description }) => {
-    const body = {};
-    if (title) body.title = title;
-    if (description !== undefined) body.description = description;
+  async ({ board_id, name, visibility }) => {
+    const body = { boardPublicId: board_id };
+    if (name) body.name = name;
+    if (visibility) body.visibility = visibility;
     const data = await kanFetch(`/boards/${board_id}`, {
       method: "PUT",
       body: JSON.stringify(body),
