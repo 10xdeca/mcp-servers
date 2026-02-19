@@ -20,6 +20,15 @@ MCP server for [Outline](https://getoutline.com) wiki. Provides tools for managi
 - `OUTLINE_API_KEY` (required) — your Outline API key
 - `OUTLINE_BASE_URL` (optional) — defaults to `https://kb.xdeca.com/api`
 
+### `@10xdeca/mcp-radicale`
+
+MCP server for [Radicale](https://radicale.org) CalDAV/CardDAV. Provides tools for managing calendars, events, todos, address books, and contacts.
+
+**Environment variables:**
+- `RADICALE_URL` (required) — your Radicale server URL (e.g. `https://dav.xdeca.com`)
+- `RADICALE_USERNAME` (required) — Radicale username
+- `RADICALE_PASSWORD` (required) — Radicale password
+
 ## Setup
 
 ```bash
@@ -45,6 +54,15 @@ Add to your `~/.claude/claude_desktop_config.json` or MCP settings:
       "args": ["./packages/outline/index.js"],
       "env": {
         "OUTLINE_API_KEY": "your-api-key"
+      }
+    },
+    "radicale": {
+      "command": "node",
+      "args": ["./packages/radicale/index.js"],
+      "env": {
+        "RADICALE_URL": "https://your-radicale-server.com",
+        "RADICALE_USERNAME": "your-username",
+        "RADICALE_PASSWORD": "your-password"
       }
     }
   }
