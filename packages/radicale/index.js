@@ -28,6 +28,10 @@ if (!RADICALE_URL || !RADICALE_USERNAME || !RADICALE_PASSWORD) {
 let caldavClient = null;
 let carddavClient = null;
 
+/** The collection owner — either RADICALE_CALENDAR_OWNER or the auth user. */
+const collectionOwner = RADICALE_CALENDAR_OWNER || RADICALE_USERNAME;
+const ownerHomeUrl = `${RADICALE_URL}/${collectionOwner}/`;
+
 async function getCaldavClient() {
   if (!caldavClient) {
     caldavClient = new DAVClient({
@@ -39,11 +43,18 @@ async function getCaldavClient() {
       authMethod: "Basic",
       defaultAccountType: "caldav",
     });
-    await caldavClient.login();
-    // Override home URL to discover a different user's collections
-    if (RADICALE_CALENDAR_OWNER && caldavClient.account) {
-      caldavClient.account.homeUrl = `${RADICALE_URL}/${RADICALE_CALENDAR_OWNER}/`;
-      caldavClient.account.rootUrl = `${RADICALE_URL}/${RADICALE_CALENDAR_OWNER}/`;
+    if (RADICALE_CALENDAR_OWNER) {
+      // Skip discovery — set the account directly to the owner's home
+      caldavClient.account = {
+        serverUrl: RADICALE_URL,
+        credentials: { username: RADICALE_USERNAME, password: RADICALE_PASSWORD },
+        rootUrl: ownerHomeUrl,
+        principalUrl: ownerHomeUrl,
+        homeUrl: ownerHomeUrl,
+        accountType: "caldav",
+      };
+    } else {
+      await caldavClient.login();
     }
   }
   return caldavClient;
@@ -60,11 +71,18 @@ async function getCarddavClient() {
       authMethod: "Basic",
       defaultAccountType: "carddav",
     });
-    await carddavClient.login();
-    // Override home URL to discover a different user's collections
-    if (RADICALE_CALENDAR_OWNER && carddavClient.account) {
-      carddavClient.account.homeUrl = `${RADICALE_URL}/${RADICALE_CALENDAR_OWNER}/`;
-      carddavClient.account.rootUrl = `${RADICALE_URL}/${RADICALE_CALENDAR_OWNER}/`;
+    if (RADICALE_CALENDAR_OWNER) {
+      // Skip discovery — set the account directly to the owner's home
+      carddavClient.account = {
+        serverUrl: RADICALE_URL,
+        credentials: { username: RADICALE_USERNAME, password: RADICALE_PASSWORD },
+        rootUrl: ownerHomeUrl,
+        principalUrl: ownerHomeUrl,
+        homeUrl: ownerHomeUrl,
+        accountType: "carddav",
+      };
+    } else {
+      await carddavClient.login();
     }
   }
   return carddavClient;
