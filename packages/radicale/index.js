@@ -13,6 +13,9 @@ const RADICALE_URL = process.env.RADICALE_URL;
 const RADICALE_USERNAME = process.env.RADICALE_USERNAME;
 const RADICALE_PASSWORD = process.env.RADICALE_PASSWORD;
 
+/** Optional: discover collections for a different user (shared calendar). */
+const RADICALE_CALENDAR_OWNER = process.env.RADICALE_CALENDAR_OWNER;
+
 if (!RADICALE_URL || !RADICALE_USERNAME || !RADICALE_PASSWORD) {
   console.error(
     "RADICALE_URL, RADICALE_USERNAME, and RADICALE_PASSWORD environment variables are required"
@@ -27,8 +30,9 @@ let carddavClient = null;
 
 async function getCaldavClient() {
   if (!caldavClient) {
+    const owner = RADICALE_CALENDAR_OWNER || RADICALE_USERNAME;
     caldavClient = new DAVClient({
-      serverUrl: RADICALE_URL,
+      serverUrl: `${RADICALE_URL}/${owner}`,
       credentials: {
         username: RADICALE_USERNAME,
         password: RADICALE_PASSWORD,
@@ -43,8 +47,9 @@ async function getCaldavClient() {
 
 async function getCarddavClient() {
   if (!carddavClient) {
+    const owner = RADICALE_CALENDAR_OWNER || RADICALE_USERNAME;
     carddavClient = new DAVClient({
-      serverUrl: RADICALE_URL,
+      serverUrl: `${RADICALE_URL}/${owner}`,
       credentials: {
         username: RADICALE_USERNAME,
         password: RADICALE_PASSWORD,
