@@ -43,18 +43,11 @@ async function getCaldavClient() {
       authMethod: "Basic",
       defaultAccountType: "caldav",
     });
-    if (RADICALE_CALENDAR_OWNER) {
-      // Skip discovery — set the account directly to the owner's home
-      caldavClient.account = {
-        serverUrl: RADICALE_URL,
-        credentials: { username: RADICALE_USERNAME, password: RADICALE_PASSWORD },
-        rootUrl: ownerHomeUrl,
-        principalUrl: ownerHomeUrl,
-        homeUrl: ownerHomeUrl,
-        accountType: "caldav",
-      };
-    } else {
-      await caldavClient.login();
+    await caldavClient.login();
+    // Redirect to the calendar owner's collections for shared access
+    if (RADICALE_CALENDAR_OWNER && caldavClient.account) {
+      caldavClient.account.homeUrl = ownerHomeUrl;
+      caldavClient.account.rootUrl = ownerHomeUrl;
     }
   }
   return caldavClient;
@@ -71,18 +64,11 @@ async function getCarddavClient() {
       authMethod: "Basic",
       defaultAccountType: "carddav",
     });
-    if (RADICALE_CALENDAR_OWNER) {
-      // Skip discovery — set the account directly to the owner's home
-      carddavClient.account = {
-        serverUrl: RADICALE_URL,
-        credentials: { username: RADICALE_USERNAME, password: RADICALE_PASSWORD },
-        rootUrl: ownerHomeUrl,
-        principalUrl: ownerHomeUrl,
-        homeUrl: ownerHomeUrl,
-        accountType: "carddav",
-      };
-    } else {
-      await carddavClient.login();
+    await carddavClient.login();
+    // Redirect to the calendar owner's collections for shared access
+    if (RADICALE_CALENDAR_OWNER && carddavClient.account) {
+      carddavClient.account.homeUrl = ownerHomeUrl;
+      carddavClient.account.rootUrl = ownerHomeUrl;
     }
   }
   return carddavClient;
