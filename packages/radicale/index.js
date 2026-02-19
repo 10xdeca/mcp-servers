@@ -30,9 +30,8 @@ let carddavClient = null;
 
 async function getCaldavClient() {
   if (!caldavClient) {
-    const owner = RADICALE_CALENDAR_OWNER || RADICALE_USERNAME;
     caldavClient = new DAVClient({
-      serverUrl: `${RADICALE_URL}/${owner}`,
+      serverUrl: RADICALE_URL,
       credentials: {
         username: RADICALE_USERNAME,
         password: RADICALE_PASSWORD,
@@ -41,15 +40,19 @@ async function getCaldavClient() {
       defaultAccountType: "caldav",
     });
     await caldavClient.login();
+    // Override home URL to discover a different user's collections
+    if (RADICALE_CALENDAR_OWNER && caldavClient.account) {
+      caldavClient.account.homeUrl = `${RADICALE_URL}/${RADICALE_CALENDAR_OWNER}/`;
+      caldavClient.account.rootUrl = `${RADICALE_URL}/${RADICALE_CALENDAR_OWNER}/`;
+    }
   }
   return caldavClient;
 }
 
 async function getCarddavClient() {
   if (!carddavClient) {
-    const owner = RADICALE_CALENDAR_OWNER || RADICALE_USERNAME;
     carddavClient = new DAVClient({
-      serverUrl: `${RADICALE_URL}/${owner}`,
+      serverUrl: RADICALE_URL,
       credentials: {
         username: RADICALE_USERNAME,
         password: RADICALE_PASSWORD,
@@ -58,6 +61,11 @@ async function getCarddavClient() {
       defaultAccountType: "carddav",
     });
     await carddavClient.login();
+    // Override home URL to discover a different user's collections
+    if (RADICALE_CALENDAR_OWNER && carddavClient.account) {
+      carddavClient.account.homeUrl = `${RADICALE_URL}/${RADICALE_CALENDAR_OWNER}/`;
+      carddavClient.account.rootUrl = `${RADICALE_URL}/${RADICALE_CALENDAR_OWNER}/`;
+    }
   }
   return carddavClient;
 }
