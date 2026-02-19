@@ -369,7 +369,7 @@ server.tool(
         : undefined;
     const objects = await client.fetchCalendarObjects({
       calendar: { url: calendar_url },
-      ...(timeRange ? { timeRange } : {}),
+      ...(timeRange ? { timeRange, expand: true } : {}),
     });
     const results = objects
       .map((o) => {
