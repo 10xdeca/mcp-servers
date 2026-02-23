@@ -254,8 +254,12 @@ server.tool(
     const body = {};
     if (title) body.title = title;
     if (description !== undefined) body.description = description;
-    if (list_id) body.listPublicId = list_id;
-    if (index !== undefined) body.index = index;
+    if (list_id) {
+      body.listPublicId = list_id;
+      body.index = index ?? 0; // Kan API requires index when moving between lists
+    } else if (index !== undefined) {
+      body.index = index;
+    }
     if (due_date !== undefined) body.dueDate = due_date;
     const data = await kanFetch(`/cards/${card_id}`, {
       method: "PUT",
