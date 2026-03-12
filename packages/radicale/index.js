@@ -227,11 +227,17 @@ function formatRRule(rruleObj) {
   if (typeof rruleObj === "string") {
     return rruleObj.replace(/^RRULE:/i, "");
   }
-  // rrule.js RRule object — call toString() and extract the RRULE line
+  // rrule.js RRule object — call toString() and extract the RRULE line.
+  // toString() may return multi-line: "DTSTART:...\nRRULE:FREQ=WEEKLY;BYDAY=MO"
   if (typeof rruleObj.toString === "function") {
     const str = rruleObj.toString();
-    const match = str.match(/RRULE:(.+)/);
-    return match ? match[1] : str.replace(/^RRULE:/i, "");
+    // Scan each line for the RRULE entry
+    for (const line of str.split(/\r?\n/)) {
+      const match = line.match(/^RRULE:(.+)/i);
+      if (match) return match[1];
+    }
+    // No RRULE line found — return undefined rather than leaking DTSTART/other lines
+    return undefined;
   }
   return undefined;
 }
