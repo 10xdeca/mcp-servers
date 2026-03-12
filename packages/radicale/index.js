@@ -113,6 +113,7 @@ function buildVEvent({
   description,
   location,
   allDay,
+  rrule,
 }) {
   const now = isoToIcal(new Date().toISOString());
   let lines = [
@@ -133,6 +134,7 @@ function buildVEvent({
   if (summary) lines.push(`SUMMARY:${summary}`);
   if (description) lines.push(`DESCRIPTION:${description}`);
   if (location) lines.push(`LOCATION:${location}`);
+  if (rrule) lines.push(`RRULE:${rrule}`);
   lines.push("END:VEVENT", "END:VCALENDAR");
   return lines.join("\r\n");
 }
@@ -214,6 +216,26 @@ function buildVCard({
 
 // --- Parsing helpers ---
 
+/**
+ * Convert a node-ical rrule object (rrule.js RRule) back to an RFC 5545 string.
+ * rrule.toString() returns e.g. "DTSTART:...\nRRULE:FREQ=WEEKLY;BYDAY=MO"
+ * — we extract just the RRULE value (without the "RRULE:" prefix).
+ */
+function formatRRule(rruleObj) {
+  if (!rruleObj) return undefined;
+  // If it's already a plain string, strip any "RRULE:" prefix
+  if (typeof rruleObj === "string") {
+    return rruleObj.replace(/^RRULE:/i, "");
+  }
+  // rrule.js RRule object — call toString() and extract the RRULE line
+  if (typeof rruleObj.toString === "function") {
+    const str = rruleObj.toString();
+    const match = str.match(/RRULE:(.+)/);
+    return match ? match[1] : str.replace(/^RRULE:/i, "");
+  }
+  return undefined;
+}
+
 /** Parse iCal data and extract VEVENT/VTODO components as plain objects. */
 function parseIcalObjects(data, type = "VEVENT") {
   const parsed = ical.sync.parseICS(data);
@@ -234,6 +256,7 @@ function parseIcalObjects(data, type = "VEVENT") {
         priority: comp.priority,
         completed: icalDateToIso(comp.completed),
         due: icalDateToIso(comp.due),
+        rrule: comp.rrule ? formatRRule(comp.rrule) : undefined,
       });
     }
   }
@@ -425,8 +448,15 @@ server.tool(
     description: z.string().optional().describe("Event description"),
     location: z.string().optional().describe("Event location"),
     all_day: z.boolean().optional().describe("Whether this is an all-day event"),
+    rrule: z
+      .string()
+      .optional()
+      .describe(
+        "RFC 5545 RRULE string (without 'RRULE:' prefix). " +
+          "E.g. 'FREQ=WEEKLY;BYDAY=SU' or 'FREQ=DAILY;COUNT=10'"
+      ),
   },
-  async ({ calendar_url, summary, start, end, description, location, all_day }) => {
+  async ({ calendar_url, summary, start, end, description, location, all_day, rrule }) => {
     const client = await getCaldavClient();
     const uid = crypto.randomUUID();
     const filename = `${uid}.ics`;
@@ -438,6 +468,7 @@ server.tool(
       description,
       location,
       allDay: all_day,
+      rrule,
     });
     const result = await client.createCalendarObject({
       calendar: { url: calendar_url },
@@ -456,6 +487,7 @@ server.tool(
               summary,
               start,
               end,
+              rrule,
               ...result,
             },
             null,
@@ -478,8 +510,16 @@ server.tool(
     description: z.string().optional().describe("New description"),
     location: z.string().optional().describe("New location"),
     all_day: z.boolean().optional().describe("Whether this is an all-day event"),
+    rrule: z
+      .string()
+      .optional()
+      .describe(
+        "RFC 5545 RRULE string (without 'RRULE:' prefix). " +
+          "Pass empty string to remove recurrence. " +
+          "E.g. 'FREQ=WEEKLY;BYDAY=SU' or 'FREQ=DAILY;COUNT=10'"
+      ),
   },
-  async ({ event_url, summary, start, end, description, location, all_day }) => {
+  async ({ event_url, summary, start, end, description, location, all_day, rrule }) => {
     const client = await getCaldavClient();
     // Fetch existing
     const calUrl = event_url.replace(/[^/]+$/, "");
@@ -491,7 +531,7 @@ server.tool(
     const existing = parseIcalObjects(objects[0].data, "VEVENT")[0];
     if (!existing) throw new Error("No VEVENT found in object");
 
-    // Merge fields
+    // Merge fields — empty string for rrule clears recurrence
     const merged = {
       uid: existing.uid,
       summary: summary !== undefined ? summary : existing.summary,
@@ -500,6 +540,7 @@ server.tool(
       description: description !== undefined ? description : existing.description,
       location: location !== undefined ? location : existing.location,
       allDay: all_day !== undefined ? all_day : false,
+      rrule: rrule !== undefined ? rrule || undefined : existing.rrule,
     };
 
     const data = buildVEvent(merged);
